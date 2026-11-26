@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<title>EDGE RUN</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#06080D;--s1:#0B0F17;--s2:#111827;
+  --cy:#00F0FF;--cy-d:rgba(0,240,255,.08);--cy-b:rgba(0,240,255,.25);
+  --mg:#FF003C;--mg-d:rgba(255,0,60,.1);--mg-b:rgba(255,0,60,.3);
+  --ye:#FFE500;--pu:#BD00FF;
+  --t1:#B8CDE0;--t2:#2E4A60;--bd:rgba(0,240,255,.07);
+}
+body{min-height:100vh;background:radial-gradient(ellipse 60% 40% at 50% 0%,#001828,#030508 55%);display:flex;justify-content:center;align-items:center;font-family:'Noto Sans KR',-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;color:var(--t1);padding:48px 20px}
+.phone{width:390px;height:844px;background:var(--bg);border-radius:52px;position:relative;overflow:hidden;display:flex;flex-direction:column;border:1px solid rgba(0,240,255,.15);box-shadow:0 0 0 1px #02060A,0 60px 120px rgba(0,0,0,.9),0 0 80px rgba(0,240,255,.06),inset 0 0 60px rgba(0,240,255,.02)}
+/* scanline */
+.phone::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,240,255,.006) 3px,rgba(0,240,255,.006) 4px);pointer-events:none;z-index:200}
+.island{position:absolute;top:13px;left:50%;transform:translateX(-50%);width:124px;height:36px;background:#000;border-radius:20px;z-index:50;border:1px solid rgba(0,240,255,.1)}
+/* status bar — no time */
+.sbar{height:52px;display:flex;align-items:flex-end;justify-content:flex-end;padding:0 28px 10px;flex-shrink:0;position:relative;z-index:10}
+.sbar-icons{display:flex;align-items:center;gap:5px;opacity:.7}
+.screens{flex:1;overflow:hidden;position:relative}
+.screen{display:none;height:100%;overflow-y:auto;scrollbar-width:none;padding-bottom:28px}
+.screen::-webkit-scrollbar{display:none}
+.screen.active{display:block}
+.bnav{height:84px;background:var(--s1);border-top:1px solid var(--bd);display:flex;justify-content:space-around;align-items:flex-start;padding-top:11px;flex-shrink:0}
+.bnav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 18px 0;background:none;border:none;opacity:.35;transition:opacity .15s;position:relative}
+.bnav-btn.active{opacity:1}
+.bnav-btn.active::before{content:'';position:absolute;top:-4px;width:18px;height:2px;background:var(--cy);box-shadow:0 0 8px var(--cy);border-radius:0 0 2px 2px}
+.bnav-ic{font-size:22px;line-height:1}
+.bnav-lbl{font-size:9px;font-weight:700;color:var(--t2);letter-spacing:1px;text-transform:uppercase}
+.bnav-btn.active .bnav-lbl{color:var(--cy)}
+
+/* TODAY HEAD */
+.today-head{padding:14px 24px 0;display:flex;justify-content:space-between;align-items:flex-start}
+.today-left{display:flex;flex-direction:column;gap:1px}
+.greet{font-size:11px;color:var(--t2);font-weight:600;letter-spacing:1px;text-transform:uppercase}
+.today-date-txt{font-size:17px;font-weight:800;letter-spacing:-.3px}
+.grade-badge{display:flex;align-items:center;gap:5px;background:var(--cy-d);border:1px solid var(--cy-b);border-radius:6px;padding:5px 11px;margin-top:5px}
+.grade-txt{font-size:10px;font-weight:800;color:var(--cy);letter-spacing:1px;text-transform:uppercase}
+
+/* MOTIVATION */
+.mot-card{margin:12px 20px 0;background:var(--s1);border-radius:8px;padding:12px 16px;display:flex;align-items:center;gap:12px;border-left:3px solid var(--cy);transition:border-color .4s}
+.mot-card.danger{border-left-color:var(--mg)}
+.mot-card.win{border-left-color:var(--ye);background:rgba(255,229,0,.05)}
+.mot-emoji{font-size:22px;flex-shrink:0;line-height:1}
+.mot-title{font-size:13px;font-weight:800;margin-bottom:2px;letter-spacing:-.2px}
+.mot-sub{font-size:10px;color:var(--t2);font-weight:600;letter-spacing:.3px}
+
+/* GEM ROW */
+.gem-section{padding:14px 20px 10px;display:flex;flex-direction:column;align-items:center;gap:8px}
+.gems-row{display:flex;gap:5px;justify-content:center;flex-wrap:wrap}
+.gem{width:34px;height:34px;border-radius:6px;background:var(--s2);position:relative;cursor:pointer;transition:all .3s cubic-bezier(.4,0,.2,1);border:1px solid rgba(0,240,255,.1);flex-shrink:0}
+.gem.done{background:var(--cy);border-color:var(--cy);box-shadow:0 0 12px rgba(0,240,255,.5),0 0 4px rgba(0,240,255,.3)}
+.gem.done::after{content:'▲';position:absolute;inset:0;display:grid;place-items:center;font-size:11px;color:#06080D;font-weight:900}
+@keyframes gem-pop{0%{transform:scale(.4)}60%{transform:scale(1.3)}100%{transform:scale(1)}}
+.gem.just-done{animation:gem-pop .35s cubic-bezier(.4,0,.2,1) both}
+@keyframes bonus-flash{0%,100%{opacity:0;transform:translateY(0)}20%{opacity:1}80%{opacity:1;transform:translateY(-20px)}}
+.bonus-rep{position:absolute;top:-8px;right:-8px;font-size:9px;font-weight:900;color:var(--ye);text-shadow:0 0 8px var(--ye);pointer-events:none;animation:bonus-flash 1.5s ease both;z-index:10}
+.gem-stats{font-size:11px;font-weight:700;color:var(--t2);display:flex;align-items:center;gap:8px;letter-spacing:.5px;text-transform:uppercase}
+.gem-stats .hi{color:var(--cy)}
+.gem-sep{opacity:.3}
+
+/* 66일 */
+.day66-wrap{margin:0 20px;background:var(--s1);border-radius:8px;padding:11px 14px;border:1px solid var(--bd)}
+.d66-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px}
+.d66-label{font-size:9px;color:var(--t2);font-weight:700;letter-spacing:1.5px;text-transform:uppercase}
+.d66-daynum{font-size:11px;font-weight:800;color:var(--cy);letter-spacing:.5px}
+.d66-track{height:5px;background:var(--s2);border-radius:2px;overflow:hidden}
+.d66-fill{height:100%;border-radius:2px;min-width:4px;background:linear-gradient(90deg,var(--cy),rgba(0,240,255,.5));box-shadow:0 0 8px rgba(0,240,255,.4);transition:width .6s ease}
+.d66-labels{display:flex;justify-content:space-between;margin-top:5px}
+.d66-pct{font-size:9px;color:var(--cy);font-weight:800;letter-spacing:.5px}
+.d66-remain{font-size:9px;color:var(--t2);font-weight:600}
+
+/* ASSET */
+.asset-card{margin:10px 20px 0;background:var(--s1);border-radius:8px;padding:11px 14px;cursor:pointer;border:1px solid var(--bd)}
+.asset-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.asset-lbl{font-size:9px;color:var(--t2);font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.asset-goal-txt{font-size:9px;color:var(--t2);font-weight:600}
+.asset-cur{display:flex;align-items:baseline;gap:3px;margin-bottom:7px}
+.asset-num{font-size:20px;font-weight:900;color:var(--cy);line-height:1}
+.asset-unit{font-size:11px;color:var(--t2);font-weight:500}
+.asset-track{height:5px;background:var(--s2);border-radius:2px;overflow:hidden}
+.asset-fill{height:100%;border-radius:2px;min-width:4px;background:linear-gradient(90deg,var(--cy),rgba(0,240,255,.5));box-shadow:0 0 8px rgba(0,240,255,.3)}
+.asset-meta{display:flex;justify-content:space-between;margin-top:5px}
+.asset-pct{font-size:9px;color:var(--cy);font-weight:800}
+.asset-left{font-size:9px;color:var(--t2);font-weight:600}
+
+/* STRIP */
+.strip{margin:10px 20px;background:var(--s1);border-radius:8px;padding:12px 0;display:flex;justify-content:space-around;border:1px solid var(--bd)}
+.strip-item{text-align:center}
+.strip-num{font-size:19px;font-weight:900;line-height:1;font-family:'Courier New',monospace;letter-spacing:-.5px}
+.n-cy{color:var(--cy)}.n-ye{color:var(--ye)}.n-mg{color:var(--mg)}
+.strip-lbl{font-size:8px;color:var(--t2);font-weight:700;margin-top:3px;letter-spacing:1px;text-transform:uppercase}
+.strip-div{width:1px;background:var(--bd)}
+
+/* CHROME MODE */
+.chrome-banner{margin:0 20px 2px;background:var(--mg-d);border:1px solid var(--mg-b);border-radius:8px;padding:9px 14px;display:flex;align-items:center;gap:10px;cursor:pointer}
+.cb-dot{width:7px;height:7px;border-radius:50%;background:var(--mg);box-shadow:0 0 8px var(--mg);flex-shrink:0;animation:pulse-mg 2s ease-in-out infinite}
+@keyframes pulse-mg{0%,100%{opacity:1}50%{opacity:.5}}
+.cb-text{font-size:11px;color:var(--mg);font-weight:800;letter-spacing:.5px}
+.cb-sub{font-size:9px;color:rgba(255,0,60,.5);font-weight:600;margin-top:1px;letter-spacing:.3px}
+
+/* SEC */
+.sec-row{padding:12px 24px 8px;display:flex;justify-content:space-between;align-items:center}
+.sec-title{font-size:10px;font-weight:800;color:var(--t2);letter-spacing:1.5px;text-transform:uppercase}
+.sec-action{font-size:11px;color:var(--cy);font-weight:700;cursor:pointer}
+
+/* CONTRACTS (quests) */
+.q-list{padding:0 20px;display:flex;flex-direction:column;gap:7px}
+.q-item{background:var(--s1);border-radius:8px;padding:10px 13px;display:flex;align-items:center;gap:11px;cursor:pointer;border:1px solid var(--bd);transition:border-color .2s;user-select:none}
+.q-item.done{border-color:rgba(0,240,255,.2);background:rgba(0,240,255,.03)}
+.q-item:active{opacity:.8}
+.q-chk{width:22px;height:22px;border-radius:4px;border:1.5px solid rgba(0,240,255,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;transition:background .2s,border-color .2s}
+.q-item.done .q-chk{background:var(--cy);border-color:var(--cy);color:#06080D;font-weight:900}
+@keyframes pop{0%{transform:scale(.6)}60%{transform:scale(1.3)}100%{transform:scale(1)}}
+.newly-done .q-chk{animation:pop .28s ease}
+.q-info{flex:1;min-width:0}
+.q-name{font-size:13px;font-weight:700;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.q-item.done .q-name{text-decoration:line-through;color:var(--t2);font-weight:500}
+.q-tags{display:flex;gap:5px;align-items:center}
+.qtag{font-size:8px;font-weight:800;padding:2px 6px;border-radius:3px;letter-spacing:.5px;text-transform:uppercase}
+.t-아침{background:rgba(255,229,0,.1);color:var(--ye)}
+.t-신체{background:rgba(0,240,255,.1);color:var(--cy)}
+.t-정신{background:rgba(189,0,255,.1);color:var(--pu)}
+.t-공부{background:rgba(255,0,60,.1);color:var(--mg)}
+.t-재테크{background:rgba(0,240,255,.08);color:rgba(0,240,255,.7)}
+.t-기타{background:rgba(46,74,96,.5);color:var(--t2)}
+.q-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0}
+.q-xp{font-size:10px;font-weight:800;color:var(--cy);letter-spacing:.5px}
+.q-item.done .q-xp{color:var(--t2)}
+.q-streak{font-size:10px;font-weight:700;color:var(--t2)}
+.q-streak.hot{color:var(--ye);text-shadow:0 0 6px rgba(255,229,0,.4)}
+
+/* TEMP TASKS */
+.temp-list{padding:0 20px;display:flex;flex-direction:column;gap:6px}
+.temp-item{background:var(--s1);border-radius:8px;padding:9px 12px;display:flex;align-items:center;gap:10px;border:1px dashed rgba(0,240,255,.12)}
+.temp-item.done{opacity:.5}
+.temp-chk{width:20px;height:20px;border-radius:3px;border:1.5px solid rgba(0,240,255,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;cursor:pointer;transition:all .2s}
+.temp-item.done .temp-chk{background:rgba(0,240,255,.2);border-color:var(--cy);color:var(--cy)}
+.temp-name{flex:1;font-size:12px;font-weight:600;cursor:pointer}
+.temp-item.done .temp-name{text-decoration:line-through;color:var(--t2)}
+.temp-actions{display:flex;gap:5px;flex-shrink:0}
+.temp-btn{background:none;border:none;font-size:14px;cursor:pointer;color:var(--t2);padding:2px;line-height:1;transition:color .15s}
+.temp-btn:hover{color:var(--cy)}
+.temp-btn.del:hover{color:var(--mg)}
+.temp-add{margin:6px 20px 0;display:flex;gap:7px}
+.temp-input{flex:1;background:var(--s1);border:1px dashed rgba(0,240,255,.15);border-radius:8px;padding:9px 12px;color:var(--t1);font-size:12px;font-family:inherit;outline:none}
+.temp-input:focus{border-color:var(--cy-b)}
+.temp-input::placeholder{color:var(--t2)}
+.temp-submit{background:var(--cy-d);border:1px solid var(--cy-b);border-radius:8px;padding:9px 14px;color:var(--cy);font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap}
+
+/* ROUTINE */
+.scr-head{padding:16px 24px 0}
+.scr-title{font-size:22px;font-weight:900;letter-spacing:-1px}
+.scr-sub{font-size:10px;color:var(--t2);font-weight:600;margin-top:3px;letter-spacing:.5px;text-transform:uppercase}
+.chip-row{display:flex;gap:6px;padding:12px 20px 2px;overflow-x:auto;scrollbar-width:none}
+.chip-row::-webkit-scrollbar{display:none}
+.chip{padding:5px 12px;border-radius:4px;font-size:9px;font-weight:800;cursor:pointer;white-space:nowrap;background:var(--s1);color:var(--t2);border:1px solid transparent;transition:all .15s;user-select:none;letter-spacing:1px;text-transform:uppercase}
+.chip.on{background:var(--cy-d);color:var(--cy);border-color:var(--cy-b)}
+.h-list{padding:10px 20px 0;display:flex;flex-direction:column;gap:8px}
+.h-card{background:var(--s1);border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:12px;border:1px solid var(--bd)}
+.h-emoji{width:44px;height:44px;background:var(--s2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;border:1px solid var(--bd)}
+.h-info{flex:1;min-width:0}
+.h-name{font-size:13px;font-weight:800;margin-bottom:3px}
+.h-streak-txt{font-size:10px;color:var(--t2);font-weight:600;margin-bottom:5px;letter-spacing:.3px}
+.h-streak-txt strong{color:var(--cy);font-weight:800}
+.h-dots{display:flex;gap:4px}
+.dot{width:8px;height:8px;border-radius:2px;background:var(--s2)}
+.dot.ok{background:var(--cy);box-shadow:0 0 4px rgba(0,240,255,.4)}.dot.today{background:var(--ye);box-shadow:0 0 6px rgba(255,229,0,.5)}.dot.miss{background:rgba(255,0,60,.3)}
+.h-right{text-align:right;flex-shrink:0}
+.h-xp{font-size:12px;font-weight:900;color:var(--cy);font-family:'Courier New',monospace}
+.h-xp-lbl{font-size:8px;color:var(--t2);font-weight:700;margin-top:1px;letter-spacing:1px}
+.add-btn{margin:12px 20px 0;background:none;border:1px dashed rgba(0,240,255,.15);border-radius:8px;padding:12px;width:100%;cursor:pointer;color:var(--t2);font-size:12px;font-weight:700;font-family:inherit;transition:all .15s;letter-spacing:.5px}
+.add-btn:hover{border-color:var(--cy-b);color:var(--cy)}
+
+/* RECORD */
+.lv-card{margin:12px 20px;background:var(--cy-d);border:1px solid var(--cy-b);border-radius:8px;padding:16px 20px}
+.lv-top-label{font-size:9px;color:var(--cy);font-weight:800;margin-bottom:3px;letter-spacing:2px;text-transform:uppercase}
+.lv-row{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:12px}
+.lv-name{font-size:20px;font-weight:900;letter-spacing:-1px}
+.lv-num{font-size:11px;color:var(--t2);font-weight:700;letter-spacing:1px}
+.lv-num strong{color:var(--cy);font-size:20px;font-weight:900;line-height:1;font-family:'Courier New',monospace}
+.xpbar-bg{height:5px;background:rgba(0,0,0,.4);border-radius:2px;overflow:hidden}
+.xpbar-fill{height:100%;background:linear-gradient(90deg,var(--cy),rgba(0,240,255,.5));border-radius:2px;box-shadow:0 0 8px rgba(0,240,255,.4);transition:width .6s ease}
+.xp-meta{display:flex;justify-content:space-between;margin-top:5px}
+.xp-cur{font-size:9px;color:var(--cy);font-weight:800;letter-spacing:.5px}
+.xp-nxt{font-size:9px;color:var(--t2);font-weight:600}
+.wk-cards{margin:0 20px 14px;display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.wk-card{background:var(--s1);border-radius:8px;padding:12px 14px;border:1px solid var(--bd)}
+.wk-num{font-size:24px;font-weight:900;line-height:1;font-family:'Courier New',monospace}
+.wk-lbl{font-size:8px;color:var(--t2);font-weight:700;margin-top:4px;letter-spacing:1px;text-transform:uppercase}
+.hmap-sec{padding:0 20px 14px}
+.hmap-label{font-size:12px;font-weight:800;letter-spacing:.5px}
+.hmap-sub{font-size:9px;color:var(--t2);font-weight:600;margin-top:1px;margin-bottom:9px;letter-spacing:.5px;text-transform:uppercase}
+.hmap-grid{display:grid;grid-template-columns:repeat(13,1fr);gap:3px}
+.hcell{aspect-ratio:1;border-radius:2px;background:var(--s2)}
+.hcell.h1{background:rgba(0,240,255,.15)}.hcell.h2{background:rgba(0,240,255,.35)}
+.hcell.h3{background:rgba(0,240,255,.65)}.hcell.h4{background:var(--cy);box-shadow:0 0 4px rgba(0,240,255,.4)}
+.bdg-grid{padding:4px 20px 0;display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.bdg{display:flex;flex-direction:column;align-items:center;gap:5px}
+.bdg-ic{width:52px;height:52px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:24px;background:var(--s1);border:1px solid var(--bd)}
+.bdg-ic.earned{background:var(--cy-d);border-color:var(--cy-b);box-shadow:0 0 10px rgba(0,240,255,.1)}
+.bdg-ic.locked{opacity:.15;filter:grayscale(1)}
+.bdg-nm{font-size:8px;color:var(--t2);text-align:center;font-weight:700;line-height:1.3;letter-spacing:.3px}
+
+/* PROFILE */
+.me-top{padding:18px 24px 0;display:flex;flex-direction:column;align-items:center;gap:8px}
+.me-av{width:76px;height:76px;border-radius:50%;background:linear-gradient(145deg,var(--cy),rgba(0,240,255,.3));display:flex;align-items:center;justify-content:center;font-size:34px;border:2px solid rgba(0,240,255,.4);box-shadow:0 0 20px rgba(0,240,255,.2)}
+.me-name{font-size:19px;font-weight:900;letter-spacing:-.5px;cursor:pointer}
+.me-name:active{color:var(--cy)}
+.me-tag{font-size:10px;color:var(--t2);font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.me-stats{margin:16px 20px;background:var(--s1);border-radius:8px;display:flex;overflow:hidden;border:1px solid var(--bd)}
+.ms{flex:1;padding:14px 8px;text-align:center;border-right:1px solid var(--bd)}
+.ms:last-child{border-right:none}
+.ms-num{font-size:20px;font-weight:900;font-family:'Courier New',monospace}
+.ms-lbl{font-size:8px;color:var(--t2);font-weight:700;margin-top:2px;letter-spacing:1px;text-transform:uppercase}
+.set-sec{padding:0 20px}
+.set-title{font-size:9px;font-weight:800;color:var(--t2);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+.set-list{display:flex;flex-direction:column;gap:1.5px}
+.set-item{background:var(--s1);padding:13px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:background .12s}
+.set-item:first-child{border-radius:8px 8px 0 0}.set-item:last-child{border-radius:0 0 8px 8px}
+.set-item:only-child{border-radius:8px}
+.set-item:active{background:var(--s2)}
+.set-left{display:flex;align-items:center;gap:11px}
+.set-ic{width:30px;height:30px;background:var(--s2);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;border:1px solid var(--bd)}
+.set-nm{font-size:13px;font-weight:600}
+.set-arr{font-size:14px;color:var(--t2)}
+.app-ver{padding:14px;text-align:center;font-size:10px;color:var(--t2);letter-spacing:.5px}
+.app-ver span{color:var(--cy);font-weight:700}
+
+/* QUEST MGMT */
+.qmgmt{position:absolute;inset:0;background:var(--bg);z-index:15;transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);overflow-y:auto;scrollbar-width:none;padding-bottom:32px}
+.qmgmt::-webkit-scrollbar{display:none}
+.qmgmt.open{transform:translateX(0)}
+.qmgmt-nav{height:52px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 20px 10px;position:sticky;top:0;background:var(--bg);z-index:5;border-bottom:1px solid var(--bd)}
+.qmgmt-back{font-size:24px;color:var(--t2);cursor:pointer;width:32px;line-height:1}
+.qmgmt-title{font-size:14px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--cy)}
+.qmgmt-add-btn{font-size:22px;color:var(--cy);cursor:pointer;width:32px;text-align:right;line-height:1}
+.qmgmt-sec{padding:14px 20px 6px;font-size:9px;font-weight:800;color:var(--t2);letter-spacing:2px;text-transform:uppercase}
+.qmgmt-cats{padding:0 20px 10px;display:flex;gap:6px;flex-wrap:wrap}
+.qmgmt-cat{display:flex;align-items:center;gap:5px;padding:6px 11px;background:var(--s1);border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;border:1px solid var(--bd);letter-spacing:.5px;text-transform:uppercase}
+.qmgmt-cat .cat-del{font-size:13px;color:var(--t2);margin-left:2px}
+.qmgmt-cat-add{padding:6px 11px;background:none;border:1px dashed rgba(0,240,255,.15);border-radius:4px;font-size:10px;font-weight:700;color:var(--t2);cursor:pointer;font-family:inherit;transition:all .15s;letter-spacing:.5px;text-transform:uppercase}
+.qmgmt-cat-add:hover{border-color:var(--cy-b);color:var(--cy)}
+.q-mgmt-item{margin:0 20px;background:var(--s1);border-radius:8px;padding:11px 13px;margin-bottom:7px;display:flex;align-items:center;gap:10px;border:1px solid var(--bd)}
+.q-mgmt-info{flex:1;min-width:0}
+.q-mgmt-name{font-size:13px;font-weight:700;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.q-mgmt-meta{font-size:9px;color:var(--t2);font-weight:600;letter-spacing:.5px}
+.q-mgmt-actions{display:flex;gap:5px;flex-shrink:0}
+.q-mgmt-btn{width:28px;height:28px;border-radius:6px;border:none;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;background:var(--s2)}
+.q-mgmt-edit{color:var(--cy)}.q-mgmt-del{color:var(--mg)}
+
+/* MODAL */
+.modal-bg{position:absolute;inset:0;background:rgba(0,0,0,.7);z-index:30;display:none;align-items:flex-end}
+.modal-bg.open{display:flex}
+.modal-sheet{background:var(--s1);border-radius:16px 16px 0 0;width:100%;padding:18px 24px 32px;max-height:80%;overflow-y:auto;border-top:1px solid var(--cy-b)}
+.modal-handle{width:36px;height:3px;background:var(--bd);border-radius:2px;margin:0 auto 18px}
+.modal-title{font-size:15px;font-weight:800;margin-bottom:14px;letter-spacing:.5px}
+.modal-input{width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:12px 14px;color:var(--t1);font-size:14px;font-family:inherit;outline:none;transition:border-color .2s}
+.modal-input:focus{border-color:var(--cy-b)}
+.modal-row{display:flex;gap:7px;margin-top:11px}
+.modal-btn{flex:1;padding:13px;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:.5px}
+.modal-cancel{background:var(--s2);color:var(--t2)}
+.modal-confirm{background:var(--cy);color:#06080D}
+.modal-label{font-size:10px;color:var(--t2);margin-bottom:6px;margin-top:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.modal-hint{font-size:10px;color:var(--t2);margin-top:5px;letter-spacing:.3px}
+.tag-picker{display:flex;gap:5px;flex-wrap:wrap}
+.tag-opt{padding:5px 11px;border-radius:4px;font-size:9px;font-weight:800;cursor:pointer;background:var(--s2);color:var(--t2);border:1px solid transparent;user-select:none;transition:all .15s;letter-spacing:1px;text-transform:uppercase}
+.tag-opt.on{border-color:var(--cy-b);color:var(--cy);background:var(--cy-d)}
+
+/* TOAST */
+.toast{position:absolute;bottom:96px;left:50%;transform:translateX(-50%) translateY(16px);background:rgba(0,240,255,.1);border:1px solid rgba(0,240,255,.25);border-radius:4px;padding:8px 16px;font-size:11px;font-weight:700;color:var(--cy);opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;z-index:40;white-space:nowrap;letter-spacing:.5px}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.bonus{background:rgba(255,229,0,.1);border-color:rgba(255,229,0,.3);color:var(--ye)}
+
+/* LEVEL UP */
+.levelup-overlay{position:absolute;inset:0;background:rgba(0,0,0,.9);z-index:35;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+.levelup-overlay.show{display:flex}
+@keyframes lu-pop{0%{transform:scale(.3);opacity:0}60%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+.lu-emoji{font-size:68px;animation:lu-pop .5s ease both;filter:drop-shadow(0 0 20px var(--cy))}
+.lu-title{font-size:26px;font-weight:900;color:var(--cy);text-align:center;text-shadow:0 0 20px rgba(0,240,255,.5);letter-spacing:-1px}
+.lu-sub{font-size:12px;color:var(--t2);text-align:center;letter-spacing:1px;text-transform:uppercase}
+.lu-btn{margin-top:6px;padding:12px 28px;background:var(--cy);color:#06080D;border:none;border-radius:6px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:1px}
+
+/* ONBOARDING */
+.onboard{position:absolute;inset:0;background:var(--bg);z-index:20;display:flex;flex-direction:column;overflow:hidden;transition:transform .4s cubic-bezier(.4,0,.2,1)}
+.onboard.hiding{transform:translateY(-100%)}
+.ob-step{display:none;flex-direction:column;flex:1;overflow-y:auto;scrollbar-width:none;padding:56px 28px 32px}
+.ob-step::-webkit-scrollbar{display:none}
+.ob-step.active{display:flex}
+.ob-logo{font-size:60px;text-align:center;margin:10px 0 18px;line-height:1;filter:drop-shadow(0 0 16px var(--cy))}
+.ob-hl{font-size:28px;font-weight:900;line-height:1.2;letter-spacing:-1.5px;margin-bottom:8px}
+.ob-hl .cy{color:var(--cy)}
+.ob-body-txt{font-size:13px;color:var(--t2);font-weight:500;line-height:1.65;margin-bottom:18px}
+.ob-btn{width:100%;padding:15px;border-radius:8px;border:none;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;transition:opacity .15s;flex-shrink:0;margin-top:auto;letter-spacing:1px;text-transform:uppercase}
+.ob-btn:active{opacity:.85}
+.ob-btn-dark{background:var(--s1);color:var(--t1);border:1px solid var(--bd)}
+.ob-btn-cy{background:var(--cy);color:#06080D}
+.ob-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.ob-back{font-size:24px;color:var(--t2);cursor:pointer;width:32px;line-height:1;transition:color .15s}
+.ob-back:active{color:var(--t1)}
+.ob-nav-space{width:32px}
+.ob-feature{background:var(--s1);border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:12px;border:1px solid var(--bd)}
+.ob-feature+.ob-feature{margin-top:8px}
+.ob-feat-em{font-size:20px;flex-shrink:0}
+.ob-feat-title{font-size:12px;font-weight:800;margin-bottom:2px}
+.ob-feat-sub{font-size:10px;color:var(--t2);font-weight:500}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="island"></div>
+
+  <!-- ONBOARDING -->
+  <div id="onboard" class="onboard">
+    <div id="ob1" class="ob-step active">
+      <div class="ob-logo">⚡</div>
+      <div class="ob-hl">EDGE<br><span class="cy">RUN</span><br>PROTOCOL</div>
+      <div class="ob-body-txt">66일간의 루틴으로<br>당신의 삶을 엣지런하세요</div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:0;margin-bottom:20px">
+        <div class="ob-feature"><span class="ob-feat-em">🎮</span><div><div class="ob-feat-title">게임식 습관 형성</div><div class="ob-feat-sub">REP, 레벨업, Streak으로 동기부여</div></div></div>
+        <div class="ob-feature" style="margin-top:7px"><span class="ob-feat-em">🔒</span><div><div class="ob-feat-title">완전 로컬 저장</div><div class="ob-feat-sub">외부 서버 없음 — 내 기기에만 존재</div></div></div>
+        <div class="ob-feature" style="margin-top:7px"><span class="ob-feat-em">⚙️</span><div><div class="ob-feat-title">완전 커스텀 가능</div><div class="ob-feat-sub">할일 추가·수정·삭제 자유롭게</div></div></div>
+      </div>
+      <button class="ob-btn ob-btn-cy" onclick="obGo(2)">INITIALIZE</button>
+    </div>
+    <div id="ob2" class="ob-step">
+      <div class="ob-nav"><div class="ob-back" onclick="obGo(1)">‹</div><div></div><div class="ob-nav-space"></div></div>
+      <div class="ob-hl" style="font-size:22px;margin-bottom:6px">SETUP<br>PROFILE</div>
+      <div class="ob-body-txt" style="margin-bottom:0">나중에 언제든 변경 가능</div>
+      <div style="flex:1;margin-top:16px;display:flex;flex-direction:column;gap:4px">
+        <div class="modal-label" style="margin-top:0">CALLSIGN (이름)</div>
+        <input class="modal-input" id="ob-name" placeholder="이름을 입력하세요">
+        <div class="modal-label">CREDIT TARGET — 목표 자산 (억)</div>
+        <input class="modal-input" id="ob-goal" type="number" placeholder="예: 100">
+        <div class="modal-label">CURRENT CREDITS — 현재 자산 (억)</div>
+        <input class="modal-input" id="ob-cur" type="number" placeholder="예: 3.5">
+        <div class="modal-hint">선택 사항. 나중에 설정에서 변경 가능</div>
+      </div>
+      <button class="ob-btn ob-btn-cy" onclick="startApp()" style="margin-top:16px">DEPLOY →</button>
+    </div>
+  </div>
+
+  <!-- STATUS BAR (no time) -->
+  <div class="sbar">
+    <div class="sbar-icons">
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor"><rect x="0" y="4" width="3" height="8" rx="1"/><rect x="4.5" y="2.5" width="3" height="9.5" rx="1"/><rect x="9" y="1" width="3" height="11" rx="1"/><rect x="13.5" y="0" width="3" height="12" rx="1" opacity=".3"/></svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor"><path d="M8 9.5a1.4 1.4 0 110 2.8 1.4 1.4 0 010-2.8zm0-3.2c1.5 0 2.9.6 3.9 1.6l-1.4 1.4a3.2 3.2 0 00-5 0L4.1 7.9A5.3 5.3 0 018 6.3zm0-3.6c2.5 0 4.7 1 6.3 2.6L13 6.6a6.6 6.6 0 00-10 0L1.7 5.3A9.3 9.3 0 018 2.7z"/></svg>
+      <svg width="25" height="12" viewBox="0 0 25 12" fill="currentColor"><rect x="0" y=".8" width="21.5" height="10.4" rx="2.4" stroke="currentColor" stroke-width="1.4" fill="none"/><rect x="21.9" y="3.5" width="2.1" height="5" rx="1.1"/><rect x="1.5" y="2.3" width="15" height="7.4" rx="1.2"/></svg>
+    </div>
+  </div>
+
+  <div class="screens">
+    <!-- ★ TODAY -->
+    <div id="s-today" class="screen active">
+      <div class="today-head">
+        <div class="today-left">
+          <div class="greet" id="greet-txt">GOOD MORNING</div>
+          <div class="today-date-txt" id="today-date">-</div>
+        </div>
+        <div class="grade-badge"><span>⚡</span><span class="grade-txt" id="lv-badge-txt">NEWBIE</span></div>
+      </div>
+
+      <!-- 동기부여 -->
+      <div class="mot-card" id="mot-card">
+        <div class="mot-emoji" id="mot-emoji">⚡</div>
+        <div><div class="mot-title" id="mot-title">SYSTEM READY</div><div class="mot-sub" id="mot-sub">AWAITING FIRST CONTRACT</div></div>
+      </div>
+
+      <!-- 젬 -->
+      <div class="gem-section">
+        <div class="gems-row" id="gems-row"></div>
+        <div class="gem-stats"><span id="gem-done-txt">0/0</span><span class="gem-sep">·</span><span><span class="hi" id="gem-xp-txt">0</span> REP</span></div>
+      </div>
+
+      <!-- 66일 -->
+      <div class="day66-wrap">
+        <div class="d66-top"><span class="d66-label">EDGE RUN PROTOCOL</span><span class="d66-daynum" id="d66-daynum">DAY 1 / 66</span></div>
+        <div class="d66-track"><div class="d66-fill" id="d66-fill" style="width:1.5%"></div></div>
+        <div class="d66-labels"><span class="d66-pct" id="d66-pct">1.5%</span><span class="d66-remain" id="d66-remain">65 DAYS LEFT</span></div>
+      </div>
+
+      <!-- 자산 -->
+      <div class="asset-card" onclick="openModal('asset')">
+        <div class="asset-top"><span class="asset-lbl">CREDIT TRACKER</span><span class="asset-goal-txt" id="asset-goal-txt">TARGET: 100억</span></div>
+        <div class="asset-cur"><span class="asset-num" id="asset-cur-num">0</span><span class="asset-unit">억</span></div>
+        <div class="asset-track"><div class="asset-fill" id="asset-fill" style="width:0%"></div></div>
+        <div class="asset-meta"><span class="asset-pct" id="asset-pct">0%</span><span class="asset-left" id="asset-left">탭해서 현재 자산 입력</span></div>
+      </div>
+
+      <!-- STRIP -->
+      <div class="strip">
+        <div class="strip-item"><div class="strip-num n-cy" id="stat-streak">0</div><div class="strip-lbl">STREAK</div></div>
+        <div class="strip-div"></div>
+        <div class="strip-item"><div class="strip-num n-ye" id="stat-done">0</div><div class="strip-lbl">DONE</div></div>
+        <div class="strip-div"></div>
+        <div class="strip-item"><div class="strip-num n-mg" id="stat-xp">0</div><div class="strip-lbl">REP</div></div>
+      </div>
+
+      <!-- CHROME MODE -->
+      <div class="chrome-banner" style="margin-top:0" id="chrome-banner" onclick="toggleHardMode()">
+        <div class="cb-dot"></div>
+        <div><div class="cb-text" id="cb-text">CHROME MODE // ACTIVE</div><div class="cb-sub" id="cb-sub">FAIL TODAY → STREAK WIPED</div></div>
+      </div>
+
+      <!-- CONTRACTS -->
+      <div class="sec-row"><span class="sec-title">DAILY CONTRACTS</span><span class="sec-action" onclick="openQuestMgmt()">MANAGE</span></div>
+      <div class="q-list" id="q-list"></div>
+
+      <!-- TEMP TASKS -->
+      <div class="sec-row"><span class="sec-title">TODAY ONLY</span><span class="sec-action" id="temp-toggle-btn" onclick="toggleTempSection()">+</span></div>
+      <div id="temp-list"></div>
+      <div class="temp-add" id="temp-add" style="display:none">
+        <input class="temp-input" id="temp-input" placeholder="오늘만 할 것 입력..." onkeydown="if(event.key==='Enter')submitTemp()">
+        <button class="temp-submit" onclick="submitTemp()">ADD</button>
+      </div>
+    </div>
+
+    <!-- ★ ROUTINE -->
+    <div id="s-routine" class="screen">
+      <div class="scr-head"><div class="scr-title">HABIT MATRIX</div><div class="scr-sub" id="routine-sub">0 ROUTINES ACTIVE</div></div>
+      <div class="chip-row" id="cat-chips"></div>
+      <div class="h-list" id="h-list"></div>
+    </div>
+
+    <!-- ★ RECORD -->
+    <div id="s-record" class="screen">
+      <div class="scr-head"><div class="scr-title">DATA LOG</div></div>
+      <div class="lv-card">
+        <div class="lv-top-label">CURRENT GRADE</div>
+        <div class="lv-row"><div class="lv-name" id="rec-lv-name">🔌 NEWBIE</div><div class="lv-num">GR.<strong id="rec-lv-num">1</strong></div></div>
+        <div class="xpbar-bg"><div class="xpbar-fill" id="xpbar-fill" style="width:0%"></div></div>
+        <div class="xp-meta"><span class="xp-cur" id="xp-cur-txt">0 REP</span><span class="xp-nxt" id="xp-nxt-txt">NEXT: 200 REP</span></div>
+      </div>
+      <div style="padding:0 20px 14px;display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;align-items:center" id="lv-roadmap"></div>
+      <div class="wk-cards">
+        <div class="wk-card"><div class="wk-num n-cy" id="rec-streak">0</div><div class="wk-lbl">STREAK</div></div>
+        <div class="wk-card"><div class="wk-num" style="color:var(--ye)" id="rec-week-pct">0%</div><div class="wk-lbl">WEEK RATE</div></div>
+        <div class="wk-card"><div class="wk-num" style="color:var(--mg)" id="rec-total">0</div><div class="wk-lbl">TOTAL JOBS</div></div>
+        <div class="wk-card"><div class="wk-num" style="color:var(--pu)" id="rec-badges">0</div><div class="wk-lbl">IMPLANTS</div></div>
+      </div>
+      <div class="hmap-sec">
+        <div class="hmap-label">ACTIVITY GRID</div>
+        <div class="hmap-sub">LAST 91 DAYS</div>
+        <div class="hmap-grid" id="heatmap"></div>
+      </div>
+      <div class="sec-row"><span class="sec-title">IMPLANT COLLECTION</span></div>
+      <div class="bdg-grid" id="bdg-grid"></div>
+    </div>
+
+    <!-- ★ PROFILE -->
+    <div id="s-me" class="screen">
+      <div class="me-top">
+        <div class="me-av">🧑</div>
+        <div class="me-name" id="me-name" onclick="openModal('name')">RUNNER ✏️</div>
+        <div class="me-tag" id="me-tag">GR.1 NEWBIE · DAY 1</div>
+      </div>
+      <div class="me-stats">
+        <div class="ms"><div class="ms-num" style="color:var(--cy)" id="me-total">0</div><div class="ms-lbl">JOBS DONE</div></div>
+        <div class="ms"><div class="ms-num" style="color:var(--ye)" id="me-streak">0</div><div class="ms-lbl">STREAK</div></div>
+        <div class="ms"><div class="ms-num" style="color:var(--pu)" id="me-badges">0</div><div class="ms-lbl">IMPLANTS</div></div>
+      </div>
+      <div class="set-sec">
+        <div class="set-title">SYSTEM CONFIG</div>
+        <div class="set-list">
+          <div class="set-item" onclick="openModal('name')"><div class="set-left"><div class="set-ic">✏️</div><div class="set-nm">이름 변경</div></div><span class="set-arr">›</span></div>
+          <div class="set-item" onclick="openQuestMgmt()"><div class="set-left"><div class="set-ic">📋</div><div class="set-nm">할일 관리</div></div><span class="set-arr">›</span></div>
+          <div class="set-item" onclick="toggleHardMode()"><div class="set-left"><div class="set-ic" style="background:var(--mg-d)">🔴</div><div class="set-nm" id="hardmode-nm" style="color:var(--mg)">CHROME MODE ON</div></div><span class="set-arr">›</span></div>
+          <div class="set-item" onclick="openModal('asset')"><div class="set-left"><div class="set-ic">💰</div><div class="set-nm">목표 자산 수정</div></div><span class="set-arr">›</span></div>
+          <div class="set-item" onclick="exportData()"><div class="set-left"><div class="set-ic">📤</div><div class="set-nm">데이터 내보내기</div></div><span class="set-arr">›</span></div>
+          <div class="set-item" onclick="resetConfirm()"><div class="set-left"><div class="set-ic">⚠️</div><div class="set-nm" style="color:var(--mg)">WIPE ALL DATA</div></div><span class="set-arr">›</span></div>
+        </div>
+      </div>
+      <div class="app-ver">EDGE RUN v2.0 · <span>LOCAL ENCRYPTED</span></div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bnav">
+    <button class="bnav-btn active" onclick="tab('today',this)"><span class="bnav-ic">⚡</span><span class="bnav-lbl">TODAY</span></button>
+    <button class="bnav-btn" onclick="tab('routine',this)"><span class="bnav-ic">🔗</span><span class="bnav-lbl">MATRIX</span></button>
+    <button class="bnav-btn" onclick="tab('record',this)"><span class="bnav-ic">📊</span><span class="bnav-lbl">LOG</span></button>
+    <button class="bnav-btn" onclick="tab('me',this)"><span class="bnav-ic">👤</span><span class="bnav-lbl">PROFILE</span></button>
+  </div>
+
+  <!-- QUEST MGMT -->
+  <div id="quest-mgmt" class="qmgmt">
+    <div class="qmgmt-nav">
+      <div class="qmgmt-back" onclick="closeQuestMgmt()">‹</div>
+      <div class="qmgmt-title">CONTRACT EDITOR</div>
+      <div class="qmgmt-add-btn" onclick="openModal('addQuest')">+</div>
+    </div>
+    <div class="qmgmt-sec">TAG TYPES</div>
+    <div class="qmgmt-cats" id="qmgmt-cats"></div>
+    <div class="qmgmt-sec" style="display:flex;justify-content:space-between;align-items:center"><span>CONTRACTS</span><span style="font-size:10px;color:var(--cy);font-weight:700;cursor:pointer" onclick="openModal('addQuest')">+ ADD</span></div>
+    <div id="qmgmt-list"></div>
+  </div>
+
+  <!-- MODAL -->
+  <div class="modal-bg" id="modal-bg" onclick="closeModalBg(event)">
+    <div class="modal-sheet" id="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title" id="modal-title">-</div>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- LEVEL UP -->
+  <div class="levelup-overlay" id="lu-overlay">
+    <div class="lu-emoji" id="lu-emoji">⚡</div>
+    <div class="lu-title" id="lu-title">GRADE UP</div>
+    <div class="lu-sub" id="lu-sub">NEW GRADE UNLOCKED</div>
+    <button class="lu-btn" onclick="closeLevelUp()">CONFIRM //</button>
+  </div>
+</div>
+
+<script>
+/* ═══════ CONSTANTS ═══════ */
+const KEY='edgerun_v1';
+const LEVELS=[
+  {name:'NEWBIE',      icon:'🔌',xp:0},
+  {name:'NETRUNNER',   icon:'💻',xp:200},
+  {name:'STREET KID',  icon:'🏙️',xp:600},
+  {name:'TECHIE',      icon:'🔧',xp:1200},
+  {name:'SOLO',        icon:'⚔️',xp:2000},
+  {name:'FIXER',       icon:'🤝',xp:3200},
+  {name:'EDGERUNNER',  icon:'⚡',xp:5000},
+  {name:'LEGEND',      icon:'👁️',xp:8000},
+];
+const BADGES=[
+  {id:'b1',ic:'🌐',nm:'FIRST RUN',   cond:s=>s.totalMissions>=1},
+  {id:'b2',ic:'🔥',nm:'7 STREAK',    cond:s=>s.longestStreak>=7},
+  {id:'b3',ic:'🌙',nm:'30 STREAK',   cond:s=>s.longestStreak>=30},
+  {id:'b4',ic:'⚡',nm:'50 JOBS',     cond:s=>s.totalMissions>=50},
+  {id:'b5',ic:'💀',nm:'200 JOBS',    cond:s=>s.totalMissions>=200},
+  {id:'b6',ic:'💎',nm:'1K REP',      cond:s=>s.totalXP>=1000},
+  {id:'b7',ic:'🔮',nm:'5K REP',      cond:s=>s.totalXP>=5000},
+  {id:'b8',ic:'🏆',nm:'GRADE 3',     cond:s=>s.level>=2},
+  {id:'b9',ic:'👑',nm:'EDGERUNNER',  cond:s=>s.level>=6},
+  {id:'b10',ic:'🎯',nm:'PERFECT DAY',cond:s=>(s.perfectDays||0)>=1},
+  {id:'b11',ic:'📈',nm:'CREDIT 1억+',cond:(s,db)=>(db?.asset?.current||0)>=1},
+  {id:'b12',ic:'⚔️',nm:'66 DAYS',    cond:(s,db)=>{if(!db)return false;const st=new Date(db.user.startDate);const t=new Date();t.setHours(0,0,0,0);return Math.floor((t-st)/86400000)>=65;}},
+];
+const DEFAULT_Q=[
+  {name:'오전 6시 기상',  tags:['아침'],xp:20},
+  {name:'물 2L 마시기',   tags:['신체'],xp:20},
+  {name:'30분 운동',      tags:['신체'],xp:30},
+  {name:'독서 30분',      tags:['정신'],xp:25},
+  {name:'영어 공부 20분', tags:['공부'],xp:25},
+  {name:'10분 명상',      tags:['정신'],xp:15},
+  {name:'오늘 일기 작성', tags:['정신'],xp:15},
+];
+const DEFAULT_CATS=['아침','신체','정신','공부','재테크','기타'];
+const EMOJIS=['☀️','💧','🏃','📚','🧠','🧘','✍️','🏋️','🥗','😴','💊','🎸','🛁','🚿','🌿'];
+
+/* ═══════ STATE ═══════ */
+let DB=null,currentFilter='전체',tempOpen=false;
+
+/* ═══════ HELPERS ═══════ */
+function dateKey(d=new Date()){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function yesterday(){const d=new Date();d.setDate(d.getDate()-1);return dateKey(d);}
+function loadDB(){try{return JSON.parse(localStorage.getItem(KEY))||null;}catch{return null;}}
+function saveDB(){localStorage.setItem(KEY,JSON.stringify(DB));}
+function todayDone(){return DB.daily[dateKey()]?.done||[];}
+function activeQ(){return DB.quests.map((q,i)=>({...q,idx:i})).filter(q=>!q.deleted);}
+
+/* ═══════ BOOT ═══════ */
+window.addEventListener('load',()=>{
+  DB=loadDB();
+  if(!DB){document.getElementById('onboard').style.display='flex';return;}
+  document.getElementById('onboard').style.display='none';
+  bootApp();
+});
+
+function bootApp(){
+  if(!DB.quests)DB.quests=DEFAULT_Q.map(q=>({...q}));
+  if(!DB.categories)DB.categories=[...DEFAULT_CATS];
+  if(!DB.daily)DB.daily={};
+  if(!DB.stats)DB.stats={totalXP:0,totalMissions:0,currentStreak:0,longestStreak:0,level:0,earnedBadges:[],perfectDays:0,habitDone:{}};
+  if(!DB.history)DB.history={};
+  if(!DB.asset)DB.asset={current:0,goal:100};
+  checkDayRollover();renderAll();setTimeout(()=>renderGemsAndContracts(),200);
+}
+
+function checkDayRollover(){
+  const today=dateKey(),yest=yesterday();
+  if(!DB.daily[today])DB.daily[today]={done:[],allDone:false,tempTasks:[]};
+  if(!DB.daily[today].tempTasks)DB.daily[today].tempTasks=[];
+  if(DB.stats.lastCheckedDate&&DB.stats.lastCheckedDate!==today){
+    // streak
+    if(DB.daily[yest]?.allDone){
+      DB.stats.currentStreak=(DB.stats.currentStreak||0)+1;
+      if(DB.stats.currentStreak>(DB.stats.longestStreak||0))DB.stats.longestStreak=DB.stats.currentStreak;
+    }else if(DB.user.hardMode){DB.stats.currentStreak=0;}
+    // history
+    if(DB.daily[yest]){
+      const aq=activeQ();
+      DB.history[yest]=Math.round((DB.daily[yest].done?.filter(x=>aq.some(q=>q.idx===x)).length||0)/(aq.length||1)*100);
+    }
+    // carry over incomplete temp tasks from yesterday → today
+    const yesterdayTemps=(DB.daily[yest]?.tempTasks||[]).filter(t=>!t.done);
+    if(yesterdayTemps.length>0){
+      DB.daily[today].tempTasks=[...yesterdayTemps.map(t=>({...t,postponed:false})),...DB.daily[today].tempTasks];
+    }
+  }
+  DB.stats.lastCheckedDate=today;saveDB();
+}
+
+function initData(name,goal,cur){
+  const today=dateKey();
+  return{user:{name:name||'RUNNER',startDate:today,hardMode:true},asset:{current:cur||0,goal:goal||100},quests:DEFAULT_Q.map(q=>({...q})),categories:[...DEFAULT_CATS],stats:{totalXP:0,totalMissions:0,currentStreak:0,longestStreak:0,level:0,earnedBadges:[],perfectDays:0,habitDone:{}},daily:{[today]:{done:[],allDone:false,tempTasks:[]}},history:{}};
+}
+
+/* ═══════ QUEST STREAK ═══════ */
+function calcStreak(qi){
+  const today=dateKey(),doneToday=DB.daily[today]?.done?.includes(qi);
+  let s=doneToday?1:0;
+  for(let i=1;i<=365;i++){const d=new Date();d.setDate(d.getDate()-i);const k=dateKey(d);if(DB.daily[k]?.done?.includes(qi))s++;else break;}
+  return s;
+}
+
+/* ═══════ MOTIVATION (behavior-science driven) ═══════ */
+function getMotivation(done,total){
+  // Near-completion effect + loss aversion framing
+  if(total===0)return{emoji:'🔌',title:'CONTRACT BOARD EMPTY',sub:'MANAGE → ADD CONTRACTS',cls:''};
+  if(done===0)return{emoji:'⚡',title:'SYSTEM READY',sub:`${total} CONTRACTS AWAITING EXECUTION`,cls:''};
+  if(done===total)return{emoji:'🏆',title:'ALL CONTRACTS CLEARED',sub:`STREAK: ${DB.stats.currentStreak} DAYS RUNNING`,cls:'win'};
+  if(done===total-1)return{emoji:'🔴',title:'FINAL CONTRACT',sub:'ONE LEFT — DO NOT BREAK CHAIN',cls:'danger'};
+  const pct=done/total;
+  // Endowed progress: frame what's done, not what's left
+  if(pct>=0.7)return{emoji:'💀',title:`${total-done} REMAINING`,sub:`${done}/${total} CLEARED — PUSH THROUGH`,cls:''};
+  if(pct>=0.5)return{emoji:'🔥',title:'PAST HALFWAY',sub:'MOMENTUM BUILDING — KEEP RUNNING',cls:''};
+  if(pct>=0.3)return{emoji:'💻',title:`${done} JOBS DONE`,sub:'GOOD PACE — STAY IN THE ZONE',cls:''};
+  return{emoji:'⚡',title:'CONTRACTS RUNNING',sub:`${done} CLEARED — CHAIN STARTED`,cls:''};
+}
+
+/* ═══════ RENDER ═══════ */
+function renderAll(){
+  renderHeader();render66Bar();renderAsset();renderGemsAndContracts();
+  renderTempTasks();renderCatChips();renderRoutines();renderMe();
+}
+
+function renderHeader(){
+  const h=new Date().getHours();
+  const g=h<6?'NIGHT OPS':h<11?'MORNING CYCLE':h<14?'MIDDAY':h<18?'AFTERNOON':'NIGHT SHIFT';
+  const days=['SUN','MON','TUE','WED','THU','FRI','SAT'];const d=new Date();
+  document.getElementById('greet-txt').textContent=g;
+  document.getElementById('today-date').textContent=`${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${days[d.getDay()]}`;
+  const lv=LEVELS[DB.stats.level]||LEVELS[0];
+  document.getElementById('lv-badge-txt').textContent=lv.name;
+  const hm=DB.user.hardMode;
+  document.getElementById('cb-text').textContent=hm?'CHROME MODE // ACTIVE':'CHROME MODE // OFF';
+  document.getElementById('cb-sub').textContent=hm?'FAIL TODAY → STREAK WIPED':'STANDARD PROTOCOL';
+  document.getElementById('chrome-banner').style.opacity=hm?'1':'0.4';
+  document.getElementById('hardmode-nm').textContent=hm?'CHROME MODE ON':'CHROME MODE OFF';
+  document.getElementById('hardmode-nm').style.color=hm?'var(--mg)':'var(--t2)';
+}
+
+function render66Bar(){
+  const start=new Date(DB.user.startDate);const today=new Date();today.setHours(0,0,0,0);
+  const day=Math.min(Math.floor((today-start)/86400000)+1,66);
+  const pct=(day/66*100).toFixed(1);
+  document.getElementById('d66-daynum').textContent=`DAY ${day} / 66`;
+  document.getElementById('d66-fill').style.width=pct+'%';
+  document.getElementById('d66-pct').textContent=pct+'%';
+  document.getElementById('d66-remain').textContent=`${Math.max(0,66-day)} DAYS LEFT`;
+}
+
+function renderAsset(){
+  const a=DB.asset;const pct=a.goal>0?a.current/a.goal*100:0;
+  document.getElementById('asset-goal-txt').textContent=`TARGET: ${a.goal}억`;
+  document.getElementById('asset-cur-num').textContent=a.current%1===0?a.current:a.current.toFixed(1);
+  document.getElementById('asset-fill').style.width=Math.min(pct,100)+'%';
+  document.getElementById('asset-pct').textContent=pct.toFixed(1)+'%';
+  document.getElementById('asset-left').textContent=(a.goal-a.current)>0?`${(a.goal-a.current).toFixed(1)}억 남음`:'TARGET REACHED ✓';
+}
+
+function renderGemsAndContracts(){
+  const aq=activeQ();const done=todayDone();
+  const doneAQ=done.filter(i=>aq.some(q=>q.idx===i));
+  const doneCount=doneAQ.length;
+  const todayXP=done.reduce((s,i)=>{const q=DB.quests[i];return s+(q&&!q.deleted?q.xp:0);},0);
+
+  // Motivation
+  const mot=getMotivation(doneCount,aq.length);
+  document.getElementById('mot-emoji').textContent=mot.emoji;
+  document.getElementById('mot-title').textContent=mot.title;
+  document.getElementById('mot-sub').textContent=mot.sub;
+  const mc=document.getElementById('mot-card');mc.className='mot-card'+(mot.cls?' '+mot.cls:'');
+
+  // Gems
+  const gr=document.getElementById('gems-row');gr.innerHTML='';
+  aq.forEach(q=>{
+    const isDone=done.includes(q.idx);
+    const gem=document.createElement('div');gem.className='gem'+(isDone?' done':'');
+    gem.onclick=()=>{const el=document.querySelector(`#q-list .q-item[data-idx="${q.idx}"]`);if(el)el.click();};
+    gr.appendChild(gem);
+  });
+
+  document.getElementById('gem-done-txt').textContent=`${doneCount}/${aq.length}`;
+  document.getElementById('gem-xp-txt').textContent=todayXP;
+  document.getElementById('stat-done').textContent=doneCount;
+  document.getElementById('stat-xp').textContent=todayXP;
+  document.getElementById('stat-streak').textContent=DB.stats.currentStreak;
+
+  // Contracts (quest list)
+  const list=document.getElementById('q-list');list.innerHTML='';
+  aq.forEach(q=>{
+    const isDone=done.includes(q.idx);
+    const streak=calcStreak(q.idx);
+    const tags=q.tags.map(t=>`<span class="qtag t-${t}">${t}</span>`).join('');
+    const streakHtml=streak>0?`<div class="q-streak${streak>=3?' hot':''}">⚡${streak}</div>`:'';
+    const div=document.createElement('div');div.className='q-item'+(isDone?' done':'');div.dataset.idx=q.idx;
+    div.innerHTML=`<div class="q-chk">${isDone?'▲':''}</div>
+      <div class="q-info"><div class="q-name">${q.name}</div><div class="q-tags">${tags}</div></div>
+      <div class="q-right">${streakHtml}<div class="q-xp">+${q.xp} REP</div></div>`;
+    div.onclick=()=>toggleQ(q.idx,div);list.appendChild(div);
+  });
+}
+
+function renderTempTasks(){
+  const today=dateKey();const tasks=DB.daily[today]?.tempTasks||[];
+  const list=document.getElementById('temp-list');list.innerHTML='';
+  tasks.forEach(t=>{
+    const div=document.createElement('div');div.className='temp-item'+(t.done?' done':'');
+    div.innerHTML=`<div class="temp-chk" onclick="toggleTemp('${t.id}')">${t.done?'✓':''}</div>
+      <div class="temp-name">${t.text}</div>
+      <div class="temp-actions">
+        <button class="temp-btn" onclick="postponeTemp('${t.id}')" title="내일로 미루기">→</button>
+        <button class="temp-btn del" onclick="deleteTemp('${t.id}')">✕</button>
+      </div>`;
+    list.appendChild(div);
+  });
+}
+
+function renderCatChips(){
+  const row=document.getElementById('cat-chips');row.innerHTML='';
+  ['전체',...DB.categories].forEach(c=>{
+    const d=document.createElement('div');d.className='chip'+(c===currentFilter?' on':'');
+    d.textContent=c;d.onclick=()=>fc(d,c);row.appendChild(d);
+  });
+}
+
+function renderRoutines(){
+  const aq=activeQ();const list=document.getElementById('h-list');list.innerHTML='';
+  document.getElementById('routine-sub').textContent=`${aq.length} ROUTINES ACTIVE`;
+  aq.forEach(q=>{
+    if(currentFilter!=='전체'&&!q.tags.includes(currentFilter))return;
+    const streak=calcStreak(q.idx);
+    const dots=[];
+    for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const k=dateKey(d);
+      if(i===0)dots.push(`<div class="dot ${todayDone().includes(q.idx)?'today':''}"></div>`);
+      else dots.push(`<div class="dot ${DB.daily[k]?.done?.includes(q.idx)?'ok':''}"></div>`);}
+    const emo=EMOJIS[q.idx%EMOJIS.length];
+    const div=document.createElement('div');div.className='h-card';
+    div.innerHTML=`<div class="h-emoji">${emo}</div>
+      <div class="h-info"><div class="h-name">${q.name}</div>
+        <div class="h-streak-txt">STREAK <strong>${streak}</strong></div>
+        <div class="h-dots">${dots.join('')}</div></div>
+      <div class="h-right"><div class="h-xp">+${q.xp}</div><div class="h-xp-lbl">REP</div></div>`;
+    list.appendChild(div);
+  });
+}
+
+function renderRecord(){
+  const s=DB.stats;const lv=LEVELS[s.level]||LEVELS[0];const nextLv=LEVELS[s.level+1];
+  const xpForThis=lv.xp;const xpForNext=nextLv?nextLv.xp:lv.xp+99999;
+  const pct=Math.min((s.totalXP-xpForThis)/(xpForNext-xpForThis)*100,100);
+  document.getElementById('rec-lv-name').textContent=`${lv.icon} ${lv.name}`;
+  document.getElementById('rec-lv-num').textContent=s.level+1;
+  document.getElementById('xpbar-fill').style.width=pct+'%';
+  document.getElementById('xp-cur-txt').textContent=`${s.totalXP} REP`;
+  document.getElementById('xp-nxt-txt').textContent=nextLv?`NEXT: ${xpForNext-s.totalXP} REP`:'MAX GRADE';
+  document.getElementById('rec-streak').textContent=s.currentStreak;
+  document.getElementById('rec-total').textContent=s.totalMissions;
+  document.getElementById('rec-badges').textContent=s.earnedBadges?.length||0;
+  const aq=activeQ();let wt=0,wd=0;
+  for(let i=0;i<7;i++){const d=new Date();d.setDate(d.getDate()-i);const k=dateKey(d);wt+=aq.length;wd+=(DB.daily[k]?.done?.filter(x=>aq.some(q=>q.idx===x)).length||0);}
+  document.getElementById('rec-week-pct').textContent=wt>0?Math.round(wd/wt*100)+'%':'0%';
+  // Roadmap
+  const rm=document.getElementById('lv-roadmap');rm.innerHTML='';
+  LEVELS.forEach((l,i)=>{
+    const done=i<s.level,cur=i===s.level;
+    const style=done?'background:var(--cy);font-size:12px':cur?'background:var(--s2);font-size:14px;border:1px solid var(--cy)':'background:var(--s1);font-size:14px;border:1px solid var(--bd)';
+    rm.innerHTML+=`<div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:46px"><div style="width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;${style};color:${done?'#06080D':'var(--t1)'}">${done?'✓':l.icon}</div><div style="font-size:7px;color:${done||cur?'var(--cy)':'var(--t2)'};font-weight:800;text-align:center;letter-spacing:.5px">${l.name.split(' ')[0]}</div></div>`;
+    if(i<LEVELS.length-1)rm.innerHTML+=`<div style="flex:1;height:1px;background:${i<s.level?'var(--cy)':'var(--s2)'};min-width:8px;margin-bottom:12px"></div>`;
+  });
+  // Heatmap
+  const hmap=document.getElementById('heatmap');hmap.innerHTML='';
+  for(let i=90;i>=0;i--){
+    const d=new Date();d.setDate(d.getDate()-i);const k=dateKey(d);
+    const rate=DB.history[k]??(DB.daily[k]?Math.round((DB.daily[k].done?.filter(x=>aq.some(q=>q.idx===x)).length||0)/(aq.length||1)*100):null);
+    let cls='hcell';
+    if(rate!==null){if(rate>=100)cls+=' h4';else if(rate>=70)cls+=' h3';else if(rate>=40)cls+=' h2';else if(rate>0)cls+=' h1';}
+    const c=document.createElement('div');c.className=cls;hmap.appendChild(c);
+  }
+  // Badges
+  const bg=document.getElementById('bdg-grid');bg.innerHTML='';
+  BADGES.forEach(b=>{
+    const earned=(s.earnedBadges||[]).includes(b.id)||b.cond(s,DB);
+    bg.innerHTML+=`<div class="bdg"><div class="bdg-ic ${earned?'earned':'locked'}">${b.ic}</div><div class="bdg-nm">${b.nm}</div></div>`;
+  });
+}
+
+function renderMe(){
+  const s=DB.stats;const lv=LEVELS[s.level]||LEVELS[0];
+  const start=new Date(DB.user.startDate);const today=new Date();today.setHours(0,0,0,0);
+  const day=Math.floor((today-start)/86400000)+1;
+  document.getElementById('me-name').textContent=(DB.user.name||'RUNNER')+' ✏️';
+  document.getElementById('me-tag').textContent=`GR.${s.level+1} ${lv.name} · DAY ${day}`;
+  document.getElementById('me-total').textContent=s.totalMissions;
+  document.getElementById('me-streak').textContent=s.currentStreak;
+  document.getElementById('me-badges').textContent=s.earnedBadges?.length||0;
+}
+
+function renderQuestMgmt(){
+  const cats=document.getElementById('qmgmt-cats');cats.innerHTML='';
+  DB.categories.forEach(c=>{
+    const div=document.createElement('div');div.className='qmgmt-cat';
+    div.innerHTML=`<span>${c}</span><span class="cat-del" onclick="deleteCat('${c}')">×</span>`;cats.appendChild(div);
+  });
+  const btn=document.createElement('button');btn.className='qmgmt-cat-add';btn.textContent='+ NEW TAG';btn.onclick=()=>openModal('addCat');cats.appendChild(btn);
+  const list=document.getElementById('qmgmt-list');list.innerHTML='';
+  activeQ().forEach(q=>{
+    const div=document.createElement('div');div.className='q-mgmt-item';
+    div.innerHTML=`<div class="q-mgmt-info"><div class="q-mgmt-name">${q.name}</div><div class="q-mgmt-meta">${q.tags.join(' · ')} · +${q.xp} REP · ⚡${calcStreak(q.idx)}</div></div>
+      <div class="q-mgmt-actions"><button class="q-mgmt-btn q-mgmt-edit" onclick="openModal('editQuest',${q.idx})">✏️</button><button class="q-mgmt-btn q-mgmt-del" onclick="deleteQuest(${q.idx})">🗑</button></div>`;
+    list.appendChild(div);
+  });
+}
+
+/* ═══════ QUEST TOGGLE ═══════ */
+function toggleQ(idx,el){
+  const today=dateKey();if(!DB.daily[today])DB.daily[today]={done:[],allDone:false,tempTasks:[]};
+  const done=DB.daily[today].done;const q=DB.quests[idx];if(!q||q.deleted)return;
+  const prevLv=DB.stats.level||0;
+  if(done.includes(idx)){
+    DB.daily[today].done=done.filter(i=>i!==idx);
+    DB.stats.totalMissions=Math.max(0,(DB.stats.totalMissions||0)-1);
+    DB.stats.totalXP=Math.max(0,(DB.stats.totalXP||0)-q.xp);
+    el.classList.remove('done');el.querySelector('.q-chk').textContent='';
+  }else{
+    // Variable Reward (Skinner): 20% chance of BONUS REP
+    const bonus=Math.random()<0.2;const xpGain=bonus?Math.round(q.xp*1.5):q.xp;
+    DB.daily[today].done.push(idx);
+    DB.stats.totalMissions=(DB.stats.totalMissions||0)+1;
+    DB.stats.totalXP=(DB.stats.totalXP||0)+xpGain;
+    el.classList.add('done');el.querySelector('.q-chk').textContent='▲';
+    el.classList.add('newly-done');setTimeout(()=>el.classList.remove('newly-done'),300);
+    if(bonus){
+      // Show bonus indicator on gem
+      const aq=activeQ();const gemIdx=aq.findIndex(x=>x.idx===idx);
+      const gems=document.getElementById('gems-row').children;
+      if(gems[gemIdx]){
+        gems[gemIdx].classList.add('just-done');
+        const bonusEl=document.createElement('div');bonusEl.className='bonus-rep';bonusEl.textContent='+BONUS!';
+        gems[gemIdx].appendChild(bonusEl);setTimeout(()=>bonusEl.remove(),1500);
+      }
+      showToast(`⚡ BONUS REP! +${xpGain} REP`,true);
+    }else{
+      const gems=document.getElementById('gems-row').children;
+      const aq=activeQ();const gemIdx=aq.findIndex(x=>x.idx===idx);
+      if(gems[gemIdx]){gems[gemIdx].classList.add('just-done');setTimeout(()=>gems[gemIdx].classList.remove('just-done'),400);}
+    }
+    const hd=DB.stats.habitDone||{};hd[q.name]=(hd[q.name]||0)+1;DB.stats.habitDone=hd;
+  }
+  const aq=activeQ();
+  DB.daily[today].allDone=DB.daily[today].done.filter(i=>aq.some(q=>q.idx===i)).length===aq.length;
+  if(DB.daily[today].allDone)DB.stats.perfectDays=(DB.stats.perfectDays||0)+1;
+  recalcLevel();if(DB.stats.level>prevLv)showLevelUp(DB.stats.level);
+  checkBadges();saveDB();renderGemsAndContracts();renderRoutines();
+  if(document.getElementById('s-record').classList.contains('active'))renderRecord();
+  renderMe();
+}
+
+function recalcLevel(){const xp=DB.stats.totalXP||0;let lv=0;for(let i=LEVELS.length-1;i>=0;i--){if(xp>=LEVELS[i].xp){lv=i;break;}}DB.stats.level=lv;}
+
+function checkBadges(){
+  const s=DB.stats;const earned=s.earnedBadges||[];
+  BADGES.forEach(b=>{if(!earned.includes(b.id)&&b.cond(s,DB)){earned.push(b.id);showToast(`🏅 IMPLANT ACQUIRED: ${b.nm}`);}});
+  DB.stats.earnedBadges=earned;
+}
+
+/* ═══════ TEMP TASKS ═══════ */
+function toggleTempSection(){
+  tempOpen=!tempOpen;
+  document.getElementById('temp-add').style.display=tempOpen?'flex':'none';
+  document.getElementById('temp-toggle-btn').textContent=tempOpen?'−':'+';
+  if(tempOpen)setTimeout(()=>document.getElementById('temp-input').focus(),100);
+}
+
+function submitTemp(){
+  const inp=document.getElementById('temp-input');const text=inp.value.trim();if(!text)return;
+  const today=dateKey();if(!DB.daily[today].tempTasks)DB.daily[today].tempTasks=[];
+  DB.daily[today].tempTasks.push({id:Date.now().toString(),text,done:false});
+  inp.value='';saveDB();renderTempTasks();
+}
+
+function toggleTemp(id){
+  const today=dateKey();const task=DB.daily[today].tempTasks?.find(t=>t.id===id);
+  if(task){task.done=!task.done;saveDB();renderTempTasks();}
+}
+
+function postponeTemp(id){
+  const today=dateKey();const task=DB.daily[today].tempTasks?.find(t=>t.id===id);if(!task)return;
+  const tmr=new Date();tmr.setDate(tmr.getDate()+1);const tmKey=dateKey(tmr);
+  if(!DB.daily[tmKey])DB.daily[tmKey]={done:[],allDone:false,tempTasks:[]};
+  if(!DB.daily[tmKey].tempTasks)DB.daily[tmKey].tempTasks=[];
+  DB.daily[tmKey].tempTasks.push({...task,done:false});
+  DB.daily[today].tempTasks=DB.daily[today].tempTasks.filter(t=>t.id!==id);
+  saveDB();renderTempTasks();showToast('→ QUEUED FOR TOMORROW');
+}
+
+function deleteTemp(id){
+  const today=dateKey();
+  DB.daily[today].tempTasks=DB.daily[today].tempTasks?.filter(t=>t.id!==id)||[];
+  saveDB();renderTempTasks();
+}
+
+/* ═══════ QUEST MGMT ═══════ */
+function deleteQuest(idx){if(!confirm(`"${DB.quests[idx]?.name}" 삭제?`))return;DB.quests[idx].deleted=true;saveDB();renderGemsAndContracts();renderQuestMgmt();renderRoutines();showToast('CONTRACT REMOVED');}
+function deleteCat(cat){if(!confirm(`"${cat}" 태그 삭제?`))return;DB.categories=DB.categories.filter(c=>c!==cat);saveDB();renderCatChips();renderQuestMgmt();showToast('TAG DELETED');}
+
+/* ═══════ MODALS ═══════ */
+function openModal(type,extra=null){
+  const bg=document.getElementById('modal-bg'),title=document.getElementById('modal-title'),body=document.getElementById('modal-body');
+  bg.classList.add('open');
+  if(type==='name'){
+    title.textContent='CALLSIGN';
+    body.innerHTML=`<input class="modal-input" id="mi-name" placeholder="이름" value="${DB.user.name||''}">
+      <div class="modal-row"><button class="modal-btn modal-cancel" onclick="closeModal()">CANCEL</button><button class="modal-btn modal-confirm" onclick="saveName()">SAVE</button></div>`;
+    setTimeout(()=>document.getElementById('mi-name').focus(),100);
+  }
+  else if(type==='asset'){
+    title.textContent='CREDIT UPDATE';
+    body.innerHTML=`<div class="modal-label" style="margin-top:0">CURRENT (억)</div>
+      <input class="modal-input" id="mi-cur" type="number" step="0.1" value="${DB.asset.current||''}">
+      <div class="modal-label">TARGET (억)</div>
+      <input class="modal-input" id="mi-goal" type="number" value="${DB.asset.goal||100}">
+      <div class="modal-row"><button class="modal-btn modal-cancel" onclick="closeModal()">CANCEL</button><button class="modal-btn modal-confirm" onclick="saveAsset()">SAVE</button></div>`;
+  }
+  else if(type==='addQuest'||type==='editQuest'){
+    const isEdit=type==='editQuest';const q=isEdit?DB.quests[extra]:null;
+    title.textContent=isEdit?'EDIT CONTRACT':'NEW CONTRACT';
+    const tagOpts=DB.categories.map(c=>`<div class="tag-opt${q?.tags?.includes(c)?' on':''}" onclick="this.classList.toggle('on')" data-tag="${c}">${c}</div>`).join('');
+    body.innerHTML=`<div class="modal-label" style="margin-top:0">CONTRACT NAME</div>
+      <input class="modal-input" id="mi-qname" placeholder="할일 이름" value="${q?.name||''}">
+      <div class="modal-label">TAGS</div><div class="tag-picker">${tagOpts}</div>
+      <div class="modal-label">REP</div>
+      <input class="modal-input" id="mi-xp" type="number" value="${q?.xp||20}">
+      <div class="modal-row"><button class="modal-btn modal-cancel" onclick="closeModal()">CANCEL</button><button class="modal-btn modal-confirm" onclick="saveQuest(${isEdit?extra:-1})">SAVE</button></div>`;
+  }
+  else if(type==='addCat'){
+    title.textContent='NEW TAG';
+    body.innerHTML=`<input class="modal-input" id="mi-cat" placeholder="태그 이름">
+      <div class="modal-row"><button class="modal-btn modal-cancel" onclick="closeModal()">CANCEL</button><button class="modal-btn modal-confirm" onclick="saveCat()">ADD</button></div>`;
+    setTimeout(()=>document.getElementById('mi-cat').focus(),100);
+  }
+}
+function closeModal(){document.getElementById('modal-bg').classList.remove('open');}
+function closeModalBg(e){if(e.target===document.getElementById('modal-bg'))closeModal();}
+
+function saveName(){const v=document.getElementById('mi-name').value.trim();if(!v)return;DB.user.name=v;saveDB();closeModal();renderHeader();renderMe();showToast('CALLSIGN UPDATED');}
+function saveAsset(){DB.asset.current=parseFloat(document.getElementById('mi-cur').value)||0;DB.asset.goal=parseFloat(document.getElementById('mi-goal').value)||100;saveDB();closeModal();renderAsset();checkBadges();saveDB();showToast('CREDITS UPDATED');}
+function saveQuest(idx){
+  const name=document.getElementById('mi-qname').value.trim();if(!name){showToast('CONTRACT NAME REQUIRED');return;}
+  const tags=[...document.querySelectorAll('#modal-body .tag-opt.on')].map(x=>x.dataset.tag);
+  const xp=parseInt(document.getElementById('mi-xp').value)||20;
+  if(idx>=0){DB.quests[idx]={...DB.quests[idx],name,tags,xp};}else{DB.quests.push({name,tags,xp});}
+  saveDB();closeModal();renderGemsAndContracts();renderRoutines();renderQuestMgmt();
+  showToast(idx>=0?'CONTRACT UPDATED':'CONTRACT ADDED');
+}
+function saveCat(){const v=document.getElementById('mi-cat').value.trim();if(!v)return;if(!DB.categories.includes(v))DB.categories.push(v);saveDB();closeModal();renderCatChips();renderQuestMgmt();showToast('TAG ADDED');}
+
+/* ═══════ QUEST MGMT OVERLAY ═══════ */
+function openQuestMgmt(){renderQuestMgmt();document.getElementById('quest-mgmt').classList.add('open');}
+function closeQuestMgmt(){document.getElementById('quest-mgmt').classList.remove('open');}
+
+/* ═══════ UTILS ═══════ */
+function tab(id,btn){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('s-'+id).classList.add('active');btn.classList.add('active');
+  if(id==='record')renderRecord();if(id==='me')renderMe();
+}
+function fc(el,filter){
+  document.querySelectorAll('#cat-chips .chip').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');currentFilter=filter;renderRoutines();
+}
+function toggleHardMode(){DB.user.hardMode=!DB.user.hardMode;saveDB();renderHeader();showToast(DB.user.hardMode?'CHROME MODE ACTIVE':'CHROME MODE DISABLED');}
+function showToast(msg,bonus=false){
+  const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(bonus?' bonus':'');
+  t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400);
+}
+function showLevelUp(lvIdx){
+  const lv=LEVELS[lvIdx]||LEVELS[0];
+  document.getElementById('lu-emoji').textContent=lv.icon;
+  document.getElementById('lu-title').textContent=`GRADE UP // ${lv.name}`;
+  document.getElementById('lu-sub').textContent='NEW GRADE UNLOCKED';
+  document.getElementById('lu-overlay').classList.add('show');
+}
+function closeLevelUp(){document.getElementById('lu-overlay').classList.remove('show');}
+function exportData(){
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(DB,null,2)],{type:'application/json'}));
+  a.download=`edgerun_${dateKey()}.json`;a.click();showToast('DATA EXPORTED');
+}
+function resetConfirm(){if(confirm('⚠️ WIPE ALL DATA? THIS CANNOT BE UNDONE.')){localStorage.removeItem(KEY);location.reload();}}
+
+/* ═══════ ONBOARDING ═══════ */
+function obGo(step){document.querySelectorAll('.ob-step').forEach(s=>s.classList.remove('active'));document.getElementById('ob'+step).classList.add('active');}
+function startApp(){
+  const name=document.getElementById('ob-name').value.trim()||'RUNNER';
+  const goal=parseFloat(document.getElementById('ob-goal').value)||100;
+  const cur=parseFloat(document.getElementById('ob-cur').value)||0;
+  DB=initData(name,goal,cur);saveDB();
+  document.getElementById('onboard').classList.add('hiding');
+  setTimeout(()=>{document.getElementById('onboard').style.display='none';bootApp();},400);
+}
+</script>
+</body>
+</html>
