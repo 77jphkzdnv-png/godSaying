@@ -683,13 +683,16 @@ function todayDone(){return DB.daily[dateKey()]?.done||[];}
 function activeQ(){return DB.quests.map((q,i)=>({...q,idx:i})).filter(q=>!q.deleted);}
 
 /* ═══════ SUPABASE DB ═══════ */
-let _saveTimer;
+let _saveTimer,_session=null;
 function saveDB(){
   clearTimeout(_saveTimer);
   _saveTimer=setTimeout(async()=>{
-    const {data:{session}}=await sb.auth.getSession();
-    if(!session)return;
-    await sb.from('user_data').upsert({user_id:session.user.id,data:DB,updated_at:new Date().toISOString()},{onConflict:'user_id'});
+    if(!_session){console.warn('saveDB: no session');return;}
+    const {error}=await sb.from('user_data').upsert(
+      {user_id:_session.user.id,data:DB,updated_at:new Date().toISOString()},
+      {onConflict:'user_id'}
+    );
+    if(error)console.error('saveDB error:',error);
   },800);
 }
 
@@ -697,6 +700,7 @@ function saveDB(){
 let _booted=false;
 window.addEventListener('load',()=>{
   sb.auth.onAuthStateChange(async(event,session)=>{
+    _session=session;
     if(!session){
       document.getElementById('login-screen').style.display='flex';
       return;
@@ -704,11 +708,13 @@ window.addEventListener('load',()=>{
     document.getElementById('login-screen').style.display='none';
     if(_booted)return;
     _booted=true;
-    const {data:row}=await sb.from('user_data').select('data').eq('user_id',session.user.id).maybeSingle();
+    const {data:row,error}=await sb.from('user_data').select('data').eq('user_id',session.user.id).maybeSingle();
+    if(error)console.error('loadDB error:',error);
     DB=row?.data||null;
     if(!DB){document.getElementById('onboard').style.display='flex';return;}
     document.getElementById('onboard').style.display='none';
     bootApp();
+  });
   });
 });
 
