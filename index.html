@@ -645,14 +645,14 @@ const BADGES=[
   {id:'b12',ic:'⚔️',nm:'66 DAYS',    cond:(s,db)=>{if(!db)return false;const st=new Date(db.user.startDate);const t=new Date();t.setHours(0,0,0,0);return Math.floor((t-st)/86400000)>=65;}},
 ];
 const DEFAULT_Q=[
-  {name:'오전 7시 기상',    tags:['아침'],xp:20},
-  {name:'운동 1시간',       tags:['신체'],xp:40},
-  {name:'독서 30분',        tags:['정신'],xp:25},
-  {name:'영어공부 20분',    tags:['공부'],xp:25},
-  {name:'중국어공부 30분',  tags:['공부'],xp:30},
-  {name:'명상 10분',        tags:['정신'],xp:15},
-  {name:'일 집중 2시간',    tags:['공부'],xp:40},
-  {name:'개인 일 1시간',    tags:['기타'],xp:30},
+  {name:'기상',         tags:['아침'],xp:20},
+  {name:'운동',         tags:['신체'],xp:40},
+  {name:'독서',         tags:['정신'],xp:25},
+  {name:'영어공부',     tags:['공부'],xp:25},
+  {name:'중국어공부',   tags:['공부'],xp:30},
+  {name:'명상',         tags:['정신'],xp:15},
+  {name:'일 집중',      tags:['공부'],xp:40},
+  {name:'개인 프로젝트',tags:['기타'],xp:30},
 ];
 const DEFAULT_CATS=['아침','신체','정신','공부','재테크','기타'];
 const EMOJIS=['☀️','💧','🏃','📚','🧠','🧘','✍️','🏋️','🥗','😴','💊','🎸','🛁','🚿','🌿'];
