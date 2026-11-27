@@ -321,8 +321,21 @@ body{min-height:100vh;background:radial-gradient(ellipse 60% 40% at 50% 0%,#0018
   .phone::after{display:none}
   .island{display:none}
   .sbar{display:none}
-  .bnav{height:calc(60px + env(safe-area-inset-bottom));padding-top:8px;padding-bottom:env(safe-area-inset-bottom)}
-  .screens{flex:1}
+  /* safe area: 상태바 위로 안 겹치게 */
+  .screens{flex:1;padding-top:env(safe-area-inset-top)}
+  .bnav{height:calc(58px + env(safe-area-inset-bottom));padding-top:8px;padding-bottom:env(safe-area-inset-bottom)}
+  /* 카드 여백 완화 */
+  .today-head{padding:12px 20px 0}
+  .mot-card{margin:10px 16px 0;padding:10px 14px}
+  .gem-section{padding:10px 16px 8px}
+  .day66-wrap{margin:0 16px}
+  .asset-card{margin:8px 16px 0;padding:10px 12px}
+  .strip{margin:8px 16px}
+  .chrome-banner{margin:0 16px 2px}
+  .sec-row{padding:10px 20px 6px}
+  .q-list{padding:0 16px;gap:6px}
+  .temp-list{padding:0 16px}
+  .temp-add{margin:5px 16px 0}
 }
 </style>
 </head>

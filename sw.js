@@ -17,8 +17,17 @@ self.addEventListener('activate', e => {
   self.clients.claim();
 });
 
+// Stale-while-revalidate: 캐시 먼저 반환 + 백그라운드에서 최신 버전으로 갱신
 self.addEventListener('fetch', e => {
   e.respondWith(
-    caches.match(e.request).then(r => r || fetch(e.request).catch(() => caches.match('/index.html')))
+    caches.open(CACHE).then(cache =>
+      cache.match(e.request).then(cached => {
+        const networkFetch = fetch(e.request).then(response => {
+          if (response.ok) cache.put(e.request, response.clone());
+          return response;
+        }).catch(() => cached);
+        return cached || networkFetch;
+      })
+    )
   );
 });
