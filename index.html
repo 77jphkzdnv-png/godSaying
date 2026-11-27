@@ -694,17 +694,22 @@ function saveDB(){
 }
 
 /* ═══════ BOOT ═══════ */
-window.addEventListener('load',async()=>{
-  const {data:{session}}=await sb.auth.getSession();
-  if(!session){
-    document.getElementById('login-screen').style.display='flex';
-    return;
-  }
-  const {data:row}=await sb.from('user_data').select('data').eq('user_id',session.user.id).maybeSingle();
-  DB=row?.data||null;
-  if(!DB){document.getElementById('onboard').style.display='flex';return;}
-  document.getElementById('onboard').style.display='none';
-  bootApp();
+let _booted=false;
+window.addEventListener('load',()=>{
+  sb.auth.onAuthStateChange(async(event,session)=>{
+    if(!session){
+      document.getElementById('login-screen').style.display='flex';
+      return;
+    }
+    document.getElementById('login-screen').style.display='none';
+    if(_booted)return;
+    _booted=true;
+    const {data:row}=await sb.from('user_data').select('data').eq('user_id',session.user.id).maybeSingle();
+    DB=row?.data||null;
+    if(!DB){document.getElementById('onboard').style.display='flex';return;}
+    document.getElementById('onboard').style.display='none';
+    bootApp();
+  });
 });
 
 function bootApp(){
